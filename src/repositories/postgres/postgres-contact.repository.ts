@@ -6,6 +6,7 @@ export class PostgresContactRepository implements ContactRepository {
     const contacts: Contact[] = await sql`
       SELECT id, name, email, phone, category_id
       FROM contacts
+      ORDER BY name ASC
     `;
 
     return contacts.slice(0, contacts.length);
