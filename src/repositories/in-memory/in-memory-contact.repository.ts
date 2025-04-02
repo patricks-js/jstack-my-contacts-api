@@ -33,6 +33,12 @@ export class InMemoryContactRepository implements ContactRepository {
     return contact ?? null;
   }
 
+  async save(contact: Contact): Promise<{ id: string }> {
+    this.#contacts.push(contact);
+
+    return { id: contact.id };
+  }
+
   async delete(id: string): Promise<void> {
     this.#contacts = this.#contacts.filter((contact) => contact.id !== id);
   }
