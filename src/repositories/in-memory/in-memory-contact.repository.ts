@@ -32,4 +32,8 @@ export class InMemoryContactRepository implements ContactRepository {
 
     return contact ?? null;
   }
+
+  async delete(id: string): Promise<void> {
+    this.#contacts = this.#contacts.filter((contact) => contact.id !== id);
+  }
 }

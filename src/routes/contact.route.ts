@@ -15,4 +15,9 @@ export const contactRoutes = new Elysia({ prefix: "/contacts" })
     }
 
     return contactToShow;
+  })
+  .delete("/:id", async ({ params, set }) => {
+    set.status = 204;
+
+    await inMemoryContactRepository.delete(params.id);
   });
