@@ -1,10 +1,18 @@
 import { InMemoryContactRepository } from "@/repositories/in-memory/in-memory-contact.repository";
-import { ContactService } from "@/services/contact.service";
 import { Elysia } from "elysia";
 
-const contactService = new ContactService(new InMemoryContactRepository());
+const inMemoryContactRepository = new InMemoryContactRepository();
 
-export const contactRoutes = new Elysia({ prefix: "/contacts" }).get(
-  "/",
-  async () => contactService.index(),
-);
+export const contactRoutes = new Elysia({ prefix: "/contacts" })
+  .get("/", async () => {
+    return inMemoryContactRepository.findAll();
+  })
+  .get("/:id", async ({ params, error }) => {
+    const contactToShow = await inMemoryContactRepository.findById(params.id);
+
+    if (!contactToShow) {
+      return error(404, "Contact not found");
+    }
+
+    return contactToShow;
+  });

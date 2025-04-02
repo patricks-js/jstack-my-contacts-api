@@ -1,8 +1,9 @@
+import { randomUUIDv7 } from "bun";
+
 import type {
   Contact,
   ContactRepository,
 } from "@/repositories/contact.repository";
-import { randomUUIDv7 } from "bun";
 
 export class InMemoryContactRepository implements ContactRepository {
   #contacts: Contact[] = [
@@ -24,5 +25,11 @@ export class InMemoryContactRepository implements ContactRepository {
 
   async findAll(): Promise<Contact[]> {
     return this.#contacts;
+  }
+
+  async findById(id: string): Promise<Contact | null> {
+    const contact = this.#contacts.find((contact) => contact.id === id);
+
+    return contact ?? null;
   }
 }

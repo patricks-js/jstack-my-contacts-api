@@ -8,4 +8,5 @@ export interface Contact {
 
 export interface ContactRepository {
   findAll(): Promise<Contact[]>;
+  findById(id: string): Promise<Contact | null>;
 }
