@@ -1,0 +1,13 @@
+name: my-contacts
+
+services:
+  postgres:
+    image: bitnami/postgresql:16
+    container_name: my-contacts-postgres
+    restart: always
+    environment:
+      - POSTGRESQL_USERNAME=my_contacts
+      - POSTGRESQL_PASSWORD=my_contacts
+      - POSTGRESQL_DATABASE=my_contacts_db
+    ports:
+      - 5432:5432

@@ -1,8 +1,8 @@
-import { InMemoryContactRepository } from "@/repositories/in-memory/in-memory-contact.repository";
+import { PostgresContactRepository } from "@/repositories/postgres/postgres-contact.repository";
 import { randomUUIDv7 } from "bun";
 import { Elysia, t } from "elysia";
 
-const contactRepository = new InMemoryContactRepository();
+const contactRepository = new PostgresContactRepository();
 
 export const contactRoutes = new Elysia({ prefix: "/contacts" })
   .get("/", async () => {
