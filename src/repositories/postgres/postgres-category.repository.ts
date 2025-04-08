@@ -41,10 +41,19 @@ export class PostgresCategoryRepository implements CategoryRepository {
   }
 
   async update(category: Category): Promise<void> {
-    throw new Error("Method not implemented.");
+    const { id, name } = category;
+
+    await sql`
+      UPDATE categories
+      SET name = ${name}
+      WHERE id = ${id}
+    `;
   }
 
   async delete(id: string): Promise<void> {
-    throw new Error("Method not implemented.");
+    await sql`
+      DELETE FROM categories
+      WHERE id = ${id}
+    `;
   }
 }

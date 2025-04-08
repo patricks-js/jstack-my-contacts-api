@@ -9,5 +9,5 @@ CREATE TABLE IF NOT EXISTS "contacts" (
   "email" TEXT NOT NULL,
   "phone" TEXT NOT NULL,
   "category_id" TEXT,
-  CONSTRAINT "fk_category" FOREIGN KEY ("category_id") REFERENCES "categories" ("id")
+  CONSTRAINT "fk_category" FOREIGN KEY ("category_id") REFERENCES "categories" ("id") ON DELETE SET NULL
 );

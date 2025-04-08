@@ -59,4 +59,52 @@ export const categoryRoutes = new Elysia({ prefix: "/categories" })
         name: t.String(),
       }),
     },
+  )
+  .put(
+    "/:id",
+    async ({ params, body, set, error }) => {
+      set.status = 204;
+
+      const categoryToUpdate = await categoryRepository.findById(params.id);
+
+      if (!categoryToUpdate || !body.name) {
+        return error(404, "Category not found");
+      }
+
+      const categoryAlreadyExists = await categoryRepository.findByName(
+        body.name,
+      );
+
+      if (categoryAlreadyExists) {
+        return error(409, "Category already exists");
+      }
+
+      const categoryUpdated = Object.assign({}, categoryToUpdate, body);
+
+      await categoryRepository.update(categoryUpdated);
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      body: t.Object({
+        name: t.Optional(t.String()),
+      }),
+    },
+  )
+  .delete(
+    "/:id",
+    async ({ params, set, error }) => {
+      set.status = 204;
+
+      await categoryRepository.delete(params.id);
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      response: {
+        204: t.Any(),
+      },
+    },
   );
