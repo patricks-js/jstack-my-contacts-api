@@ -15,6 +15,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@elysiajs/swagger": "^1.2.2",
     "elysia": "^1.2.25"
   }
 }
