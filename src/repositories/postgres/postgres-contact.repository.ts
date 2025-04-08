@@ -1,15 +1,42 @@
 import { sql } from "bun";
-import type { Contact, ContactRepository } from "../contact.repository";
+import type {
+  Contact,
+  ContactRepository,
+  ContactWithCategory,
+} from "../contact.repository";
+
+type ContactJoinCategory = Omit<Contact, "category_id"> & {
+  category_name: string;
+};
 
 export class PostgresContactRepository implements ContactRepository {
-  async findAll(): Promise<Contact[]> {
-    const contacts: Contact[] = await sql`
-      SELECT id, name, email, phone, category_id
+  async findAll(): Promise<ContactWithCategory[]> {
+    const contacts: ContactJoinCategory[] = await sql`
+      SELECT
+        contacts.id,
+        contacts.name,
+        contacts.email,
+        contacts.phone,
+        categories.name AS category_name
       FROM contacts
+      LEFT JOIN
+        categories ON categories.id = contacts.category_id
       ORDER BY name ASC
     `;
 
-    return contacts.slice(0, contacts.length);
+    const contactsWithCategory: ContactWithCategory[] = contacts
+      .map((contact) => ({
+        id: contact.id,
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        category: {
+          name: contact.category_name,
+        },
+      }))
+      .slice(0, contacts.length);
+
+    return contactsWithCategory;
   }
 
   async findById(id: string): Promise<Contact | null> {

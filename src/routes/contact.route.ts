@@ -22,7 +22,6 @@ export const contactRoutes = new Elysia({
             email: t.String(),
             phone: t.String(),
             category: t.Object({
-              id: t.String(),
               name: t.String(),
             }),
           }),

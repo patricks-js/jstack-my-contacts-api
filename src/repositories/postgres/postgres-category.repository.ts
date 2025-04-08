@@ -5,6 +5,7 @@ export class PostgresCategoryRepository implements CategoryRepository {
   async findAll(): Promise<Category[]> {
     const categories: Category[] = await sql`
       SELECT * FROM categories
+      ORDER BY name ASC
     `;
 
     return categories.slice(0, categories.length);

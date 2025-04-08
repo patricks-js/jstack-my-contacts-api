@@ -1,3 +1,5 @@
+import type { Category } from "./category.repository";
+
 export interface Contact {
   id: string;
   name: string;
@@ -6,8 +8,12 @@ export interface Contact {
   categoryId: string;
 }
 
+export type ContactWithCategory = Omit<Contact, "categoryId"> & {
+  category: Omit<Category, "id">;
+};
+
 export interface ContactRepository {
-  findAll(): Promise<Contact[]>;
+  findAll(): Promise<ContactWithCategory[]>;
   findById(id: string): Promise<Contact | null>;
   findByEmail(email: string): Promise<Contact | null>;
   save(contact: Contact): Promise<{ id: string }>;
