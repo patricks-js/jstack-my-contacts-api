@@ -11,3 +11,9 @@ services:
       - POSTGRESQL_DATABASE=my_contacts_db
     ports:
       - 5432:5432
+    volumes:
+      - postgres-data:/bitnami/postgresql
+      - ./schemas.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  postgres-data:

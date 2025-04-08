@@ -1,10 +1,10 @@
 {
   "name": "my-contacts",
-  "module": "index.ts",
+  "module": "src/server.ts",
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run --watch index.ts",
+    "dev": "bun run --watch src/server.ts",
     "format": "biome check --write ."
   },
   "devDependencies": {
