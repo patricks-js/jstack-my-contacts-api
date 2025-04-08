@@ -3,7 +3,7 @@ import { Elysia } from "elysia";
 import { categoryRoutes } from "./routes/category.route";
 import { contactRoutes } from "./routes/contact.route";
 
-const app = new Elysia()
+export const app = new Elysia()
   .use(swagger())
   .use(contactRoutes)
   .use(categoryRoutes)
