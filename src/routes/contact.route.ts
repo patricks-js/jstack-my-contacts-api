@@ -84,8 +84,19 @@ export const contactRoutes = new Elysia({ prefix: "/contacts" })
       }),
     },
   )
-  .delete("/:id", async ({ params, set }) => {
-    set.status = 204;
+  .delete(
+    "/:id",
+    async ({ params, set }) => {
+      set.status = 204;
 
-    await contactRepository.delete(params.id);
-  });
+      await contactRepository.delete(params.id);
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      response: {
+        204: t.Any(),
+      },
+    },
+  );

@@ -1,26 +1,13 @@
-import { InMemoryCategoryRepository } from "@/repositories/in-memory/in-memory-category.repository";
+import { PostgresCategoryRepository } from "@/repositories/postgres/postgres-category.repository";
 import { randomUUIDv7 } from "bun";
 import { Elysia, t } from "elysia";
 
-const categoryRepository = new InMemoryCategoryRepository();
+const categoryRepository = new PostgresCategoryRepository();
 
 export const categoryRoutes = new Elysia({ prefix: "/categories" })
-  .get(
-    "/",
-    async () => {
-      return categoryRepository.findAll();
-    },
-    {
-      response: {
-        200: t.Array(
-          t.Object({
-            id: t.String(),
-            name: t.String(),
-          }),
-        ),
-      },
-    },
-  )
+  .get("/", async () => {
+    return categoryRepository.findAll();
+  })
   .post(
     "/",
     async ({ body, set, error }) => {
