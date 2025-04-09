@@ -63,7 +63,13 @@ This project demonstrates my ability to:
         PORT=3000
        ```
 
-4. **Start the server:**
+4. **Up the containers:**
+
+    ```sh
+    docker-compose up -d
+    ```
+
+5. **Start the server:**
 
     ```sh
     bun start
