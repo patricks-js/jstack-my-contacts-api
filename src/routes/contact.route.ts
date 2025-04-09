@@ -1,3 +1,9 @@
+import {
+  CONTACT_KEY,
+  CONTACT_LIST_KEY,
+  DEFAULT_EXPIRATION_TIME,
+  redisClient,
+} from "@/lib/redis";
 import { PostgresContactRepository } from "@/repositories/postgres/postgres-contact.repository";
 import { randomUUIDv7 } from "bun";
 import { Elysia, t } from "elysia";
@@ -11,7 +17,22 @@ export const contactRoutes = new Elysia({
   .get(
     "/",
     async () => {
-      return contactRepository.findAll();
+      const contactsCached = await redisClient.get(CONTACT_LIST_KEY);
+
+      if (contactsCached) {
+        return JSON.parse(contactsCached);
+      }
+
+      const contacts = await contactRepository.findAll();
+
+      await redisClient.set(
+        CONTACT_LIST_KEY,
+        JSON.stringify(contacts),
+        "EX",
+        DEFAULT_EXPIRATION_TIME,
+      );
+
+      return contacts;
     },
     {
       response: {
@@ -35,11 +56,24 @@ export const contactRoutes = new Elysia({
   .get(
     "/:id",
     async ({ params, error }) => {
+      const contactCached = await redisClient.get(`${CONTACT_KEY}${params.id}`);
+
+      if (contactCached) {
+        return JSON.parse(contactCached);
+      }
+
       const contactToShow = await contactRepository.findById(params.id);
 
       if (!contactToShow) {
         return error(404, "Contact not found");
       }
+
+      await redisClient.set(
+        `${CONTACT_KEY}${params.id}`,
+        JSON.stringify(contactToShow),
+        "EX",
+        DEFAULT_EXPIRATION_TIME,
+      );
 
       return contactToShow;
     },
@@ -74,6 +108,8 @@ export const contactRoutes = new Elysia({
       if (emailAlreadyTaken) {
         return error(409, "Email already taken");
       }
+
+      await redisClient.del(CONTACT_LIST_KEY);
 
       return contactRepository.save({
         id,
@@ -138,6 +174,11 @@ export const contactRoutes = new Elysia({
 
       await contactRepository.update(updatedContact);
 
+      await Promise.all([
+        redisClient.del(`${CONTACT_KEY}${params.id}`),
+        redisClient.del(CONTACT_LIST_KEY),
+      ]);
+
       set.status = 204;
     },
     {
@@ -187,6 +228,11 @@ export const contactRoutes = new Elysia({
       set.status = 204;
 
       await contactRepository.delete(params.id);
+
+      await Promise.all([
+        redisClient.del(`${CONTACT_KEY}${params.id}`),
+        redisClient.del(CONTACT_LIST_KEY),
+      ]);
     },
     {
       params: t.Object({
