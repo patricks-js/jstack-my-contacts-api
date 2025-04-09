@@ -1,37 +1,46 @@
 # JStack - My Contacts API
 
-This project shows my ability to build a RESTful API using TypeScript, PostgreSQL, and Redis. The API manages contacts and categories, allowing users to perform CRUD operations. The project includes full documentation and testing capabilities.
+This project was developed as part of the **JStack course**, which focuses on building modern web APIs with Node.js and PostgreSQL. However, instead of just following the default stack, I took the opportunity to **experiment with new technologies and go beyond the course material** — using tools like **Bun**, **Elysia**, and **Redis** to bring performance, modern syntax, and better developer experience to the table.
 
-## Features
+The API manages **contacts** and **categories**, offering full CRUD operations, caching, documentation, and automated testing.
 
-- **CRUD** operations for **contacts** and **categories**
-- **PostgreSQL** database integration
-- **Redis** for caching
-- **Docker** support for easy setup
-- **Swagger** documentation for API endpoints
-- **Automated testing** with bun
+## 🚀 What I Did Differently
 
-## Technologies Used
+While the original course used **Node.js**, **Express**, and the `pg` library for PostgreSQL integration, I decided to refactor the entire backend with a more modern approach:
 
-- **TypeScript**: For type safety and better code maintainability
-- **PostgreSQL**: As the database solution
-- **Redis**: For caching
-- **Docker**: For easy setup and deployment
-- **Swagger**: For API documentation
-- **bun**: As runtime, package manager and test runner
+- 🔄 **Replaced Express with Elysia**: a lightweight and high-performance web framework built on Bun, offering a better DX and faster routing.
+- 🧠 **Used Bun’s native `sql` function** instead of `pg`: reducing dependencies and improving performance by leveraging Bun’s tight PostgreSQL integration.
+- ⚡️ **Integrated Redis for caching and deletion logic**: though I’ve only scratched the surface of Redis, it already helps improve response times for repeated queries.
+- 🧪 **Set up tests using Bun’s built-in test runner**: no need for external libs like Jest or Mocha — keeping things fast and simple.
+- 📦 **Dockerized the entire environment** for portability and ease of setup.
 
-## Demonstration
+## 🛠️ Features
 
-This project demonstrates my ability to:
+- Full **CRUD** operations for **contacts** and **categories**
+- **PostgreSQL** database integration with optimized queries
+- **Redis** caching layer for performance boost
+- **Docker** support for containerized development
+- **Swagger** API documentation
+- **Automated testing** with **Bun’s native test runner**
 
-- Develop a RESTful API using TypeScript
-- Integrate a PostgreSQL database with an API
-- Use Redis for caching to improve performance
-- Use Docker for containerization
-- Document APIs with Swagger
-- Write and run comprehensive tests
+## ⚒️ Technologies Used
 
-## Installation
+- **TypeScript** – type-safe development
+- **Bun** – runtime, package manager, and test runner
+- **Elysia** – high-performance web framework
+- **PostgreSQL** – relational database
+- **Redis** – simple caching layer
+- **Swagger** – auto-generated documentation
+- **Docker** – dev environment containerization
+
+## 📚 What This Project Shows
+
+- Ability to go beyond course content and choose better-suited tools
+- Comfortable working with both relational databases and caching systems
+- Solid understanding of API design, testing, and documentation
+- Familiarity with containerization and project portability
+
+## 📃 Installation
 
 ### Prerequisites
 
@@ -77,7 +86,7 @@ This project demonstrates my ability to:
 
 The API will be available at `http://localhost:3000` and the Swagger documentation at `http://localhost:3000/swagger`.
 
-## API Endpoints
+## 🗾 API Endpoints
 
 The Contacts API provides the following endpoints:
 
@@ -98,11 +107,11 @@ The Contacts API provides the following endpoints:
 - `PUT /categories/:id`: Update a category
 - `DELETE /categories/:id`: Delete a category
 
-## Cache Utilities
+## 🧲 Cache Utilities
 
 The project includes caching utilities implemented in `src/functions/cache/`. These utilities leverage Redis to improve the performance of the API by caching frequently accessed data and revalidating cache entries when necessary.
 
-## Testing
+## 🧪 Testing
 
 To run the tests, use the following command:
 
