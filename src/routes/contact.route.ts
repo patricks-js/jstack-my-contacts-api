@@ -1,9 +1,6 @@
-import {
-  CONTACT_KEY,
-  CONTACT_LIST_KEY,
-  DEFAULT_EXPIRATION_TIME,
-  redisClient,
-} from "@/lib/redis";
+import { getCacheDataOrSet } from "@/functions/cache/get-cache-data-or-set";
+import { revalidateCacheOrDelete } from "@/functions/cache/revalidate-cache";
+import { CONTACT_KEY, CONTACT_LIST_KEY } from "@/lib/redis";
 import { PostgresContactRepository } from "@/repositories/postgres/postgres-contact.repository";
 import { randomUUIDv7 } from "bun";
 import { Elysia, t } from "elysia";
@@ -17,22 +14,14 @@ export const contactRoutes = new Elysia({
   .get(
     "/",
     async () => {
-      const contactsCached = await redisClient.get(CONTACT_LIST_KEY);
-
-      if (contactsCached) {
-        return JSON.parse(contactsCached);
-      }
-
-      const contacts = await contactRepository.findAll();
-
-      await redisClient.set(
+      const contactsCached = await getCacheDataOrSet(
         CONTACT_LIST_KEY,
-        JSON.stringify(contacts),
-        "EX",
-        DEFAULT_EXPIRATION_TIME,
+        async () => {
+          return contactRepository.findAll();
+        },
       );
 
-      return contacts;
+      return contactsCached;
     },
     {
       response: {
@@ -56,26 +45,17 @@ export const contactRoutes = new Elysia({
   .get(
     "/:id",
     async ({ params, error }) => {
-      const contactCached = await redisClient.get(`${CONTACT_KEY}${params.id}`);
-
-      if (contactCached) {
-        return JSON.parse(contactCached);
-      }
-
-      const contactToShow = await contactRepository.findById(params.id);
-
-      if (!contactToShow) {
-        return error(404, "Contact not found");
-      }
-
-      await redisClient.set(
+      const contactCached = await getCacheDataOrSet(
         `${CONTACT_KEY}${params.id}`,
-        JSON.stringify(contactToShow),
-        "EX",
-        DEFAULT_EXPIRATION_TIME,
+        async () => {
+          const contact = await contactRepository.findById(params.id);
+          if (!contact) return error(404, "Contact not found");
+
+          return contact;
+        },
       );
 
-      return contactToShow;
+      return contactCached;
     },
     {
       params: t.Object({
@@ -109,7 +89,7 @@ export const contactRoutes = new Elysia({
         return error(409, "Email already taken");
       }
 
-      await redisClient.del(CONTACT_LIST_KEY);
+      await revalidateCacheOrDelete(CONTACT_LIST_KEY);
 
       return contactRepository.save({
         id,
@@ -171,8 +151,8 @@ export const contactRoutes = new Elysia({
       await contactRepository.update(updatedContact);
 
       await Promise.all([
-        redisClient.del(`${CONTACT_KEY}${params.id}`),
-        redisClient.del(CONTACT_LIST_KEY),
+        revalidateCacheOrDelete(`${CONTACT_KEY}${params.id}`, updatedContact),
+        revalidateCacheOrDelete(CONTACT_LIST_KEY),
       ]);
 
       set.status = 204;
@@ -226,8 +206,8 @@ export const contactRoutes = new Elysia({
       await contactRepository.delete(params.id);
 
       await Promise.all([
-        redisClient.del(`${CONTACT_KEY}${params.id}`),
-        redisClient.del(CONTACT_LIST_KEY),
+        revalidateCacheOrDelete(`${CONTACT_KEY}${params.id}`),
+        revalidateCacheOrDelete(CONTACT_LIST_KEY),
       ]);
     },
     {

@@ -1,12 +1,9 @@
 import { randomUUIDv7 } from "bun";
 import { Elysia, t } from "elysia";
 
-import {
-  CATEGORY_KEY,
-  CATEGORY_LIST_KEY,
-  DEFAULT_EXPIRATION_TIME,
-  redisClient,
-} from "@/lib/redis";
+import { getCacheDataOrSet } from "@/functions/cache/get-cache-data-or-set";
+import { revalidateCacheOrDelete } from "@/functions/cache/revalidate-cache";
+import { CATEGORY_KEY, CATEGORY_LIST_KEY } from "@/lib/redis";
 import { PostgresCategoryRepository } from "@/repositories/postgres/postgres-category.repository";
 
 const categoryRepository = new PostgresCategoryRepository();
@@ -18,22 +15,14 @@ export const categoryRoutes = new Elysia({
   .get(
     "/",
     async () => {
-      const categoriesCached = await redisClient.get(CATEGORY_LIST_KEY);
-
-      if (categoriesCached) {
-        return JSON.parse(categoriesCached);
-      }
-
-      const categories = await categoryRepository.findAll();
-
-      await redisClient.set(
+      const categoriesCached = await getCacheDataOrSet(
         CATEGORY_LIST_KEY,
-        JSON.stringify(categories),
-        "EX",
-        DEFAULT_EXPIRATION_TIME,
+        async () => {
+          return categoryRepository.findAll();
+        },
       );
 
-      return categories;
+      return categoriesCached;
     },
     {
       detail: {
@@ -54,28 +43,17 @@ export const categoryRoutes = new Elysia({
   .get(
     "/:id",
     async ({ params, error }) => {
-      const categoryCached = await redisClient.get(
+      const categoryCached = await getCacheDataOrSet(
         `${CATEGORY_KEY}${params.id}`,
+        async () => {
+          const category = await categoryRepository.findById(params.id);
+          if (!category) return error(404, "Category not found");
+
+          return category;
+        },
       );
 
-      if (categoryCached) {
-        return JSON.parse(categoryCached);
-      }
-
-      const categoryToShow = await categoryRepository.findById(params.id);
-
-      if (!categoryToShow) {
-        return error(404, "Category not found");
-      }
-
-      await redisClient.set(
-        `${CATEGORY_KEY}${params.id}`,
-        JSON.stringify(categoryToShow),
-        "EX",
-        DEFAULT_EXPIRATION_TIME,
-      );
-
-      return categoryToShow;
+      return categoryCached;
     },
     {
       detail: {
@@ -101,28 +79,17 @@ export const categoryRoutes = new Elysia({
   .get(
     "/query",
     async ({ query, error }) => {
-      const categoryCached = await redisClient.get(
+      const categoryCached = await getCacheDataOrSet(
         `${CATEGORY_KEY}${query.name}`,
+        async () => {
+          const category = await categoryRepository.findByName(query.name);
+          if (!category) return error(404, "Category not found");
+
+          return category;
+        },
       );
 
-      if (categoryCached) {
-        return JSON.parse(categoryCached);
-      }
-
-      const categoryToShow = await categoryRepository.findByName(query.name);
-
-      if (!categoryToShow) {
-        return error(404, "Category not found");
-      }
-
-      await redisClient.set(
-        `${CATEGORY_KEY}${query.name}`,
-        JSON.stringify(categoryToShow),
-        "EX",
-        DEFAULT_EXPIRATION_TIME,
-      );
-
-      return categoryToShow;
+      return categoryCached;
     },
     {
       detail: {
@@ -160,7 +127,7 @@ export const categoryRoutes = new Elysia({
         return error(409, "Category already exists");
       }
 
-      await redisClient.del(CATEGORY_LIST_KEY);
+      await revalidateCacheOrDelete(CATEGORY_LIST_KEY);
 
       return categoryRepository.save({
         id,
@@ -208,12 +175,12 @@ export const categoryRoutes = new Elysia({
 
       const categoryUpdated = Object.assign({}, categoryToUpdate, body);
 
-      await Promise.all([
-        redisClient.del(`${CATEGORY_KEY}${params.id}`),
-        redisClient.del(CATEGORY_LIST_KEY),
-      ]);
-
       await categoryRepository.update(categoryUpdated);
+
+      await Promise.all([
+        revalidateCacheOrDelete(`${CATEGORY_KEY}${params.id}`, categoryUpdated),
+        revalidateCacheOrDelete(CATEGORY_LIST_KEY),
+      ]);
     },
     {
       detail: {
@@ -244,14 +211,14 @@ export const categoryRoutes = new Elysia({
   )
   .delete(
     "/:id",
-    async ({ params, set, error }) => {
+    async ({ params, set }) => {
       set.status = 204;
 
       await categoryRepository.delete(params.id);
 
       await Promise.all([
-        redisClient.del(`${CATEGORY_KEY}${params.id}`),
-        redisClient.del(CATEGORY_LIST_KEY),
+        revalidateCacheOrDelete(`${CATEGORY_KEY}${params.id}`),
+        revalidateCacheOrDelete(CATEGORY_LIST_KEY),
       ]);
     },
     {
