@@ -86,6 +86,7 @@ export const categoryRoutes = new Elysia({
       params: t.Object({
         id: t.String({
           description: "Category ID",
+          examples: ["12345678-1234-1234-1234-123456789012"],
         }),
       }),
       response: {
@@ -132,6 +133,7 @@ export const categoryRoutes = new Elysia({
       query: t.Object({
         name: t.String({
           description: "Category name to search for",
+          examples: ["Friends"],
         }),
       }),
       response: {
@@ -174,12 +176,12 @@ export const categoryRoutes = new Elysia({
       body: t.Object({
         name: t.String({
           description: "Name of the category",
+          examples: ["Friends"],
         }),
       }),
       response: {
         201: t.Object({
           id: t.String(),
-          name: t.String(),
         }),
         409: t.String(),
       },
@@ -222,12 +224,14 @@ export const categoryRoutes = new Elysia({
       params: t.Object({
         id: t.String({
           description: "Category ID to update",
+          examples: ["12345678-1234-1234-1234-123456789012"],
         }),
       }),
       body: t.Object({
         name: t.Optional(
           t.String({
             description: "New name for the category",
+            examples: ["Friends"],
           }),
         ),
       }),
@@ -259,6 +263,7 @@ export const categoryRoutes = new Elysia({
       params: t.Object({
         id: t.String({
           description: "Category ID to delete",
+          examples: ["12345678-1234-1234-1234-123456789012"],
         }),
       }),
       response: {

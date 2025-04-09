@@ -43,7 +43,7 @@ export const contactRoutes = new Elysia({
             email: t.String(),
             phone: t.String(),
             category: t.Object({
-              name: t.String(),
+              name: t.Nullable(t.String()),
             }),
           }),
         ),
@@ -87,7 +87,7 @@ export const contactRoutes = new Elysia({
           name: t.String(),
           email: t.String(),
           phone: t.String(),
-          categoryId: t.String(),
+          categoryId: t.Optional(t.String()),
         }),
         404: t.String(),
       },
@@ -139,10 +139,6 @@ export const contactRoutes = new Elysia({
       response: {
         201: t.Object({
           id: t.String(),
-          name: t.String(),
-          email: t.String(),
-          phone: t.String(),
-          categoryId: t.String(),
         }),
         409: t.String(),
       },

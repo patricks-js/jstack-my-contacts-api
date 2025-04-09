@@ -4,7 +4,17 @@ import { categoryRoutes } from "./routes/category.route";
 import { contactRoutes } from "./routes/contact.route";
 
 export const app = new Elysia()
-  .use(swagger())
+  .use(
+    swagger({
+      documentation: {
+        info: {
+          title: "Contact List API",
+          version: "1.0.0",
+        },
+        openapi: "3.1.0",
+      },
+    }),
+  )
   .onError(({ error, code }) => {
     console.error(error, code);
   })
