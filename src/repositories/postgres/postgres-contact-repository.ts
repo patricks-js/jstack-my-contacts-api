@@ -4,6 +4,7 @@ import type { Contact, ContactWithCategory } from "@/models/contact";
 import type { ContactRepository } from "@/repositories/contracts/contact-repository";
 
 type ContactJoinCategory = Omit<Contact, "category_id"> & {
+  category_id: string;
   category_name: string;
 };
 
@@ -15,6 +16,7 @@ export class PostgresContactRepository implements ContactRepository {
         contacts.name,
         contacts.email,
         contacts.phone,
+        categories.id AS category_id
         categories.name AS category_name
       FROM contacts
       LEFT JOIN
@@ -29,6 +31,7 @@ export class PostgresContactRepository implements ContactRepository {
         email: contact.email,
         phone: contact.phone,
         category: {
+          id: contact.category_id,
           name: contact.category_name,
         },
       }))
@@ -44,6 +47,7 @@ export class PostgresContactRepository implements ContactRepository {
         contacts.name,
         contacts.email,
         contacts.phone,
+        categories.id AS category_id
         categories.name AS category_name
       FROM contacts
       LEFT JOIN
@@ -61,6 +65,7 @@ export class PostgresContactRepository implements ContactRepository {
       email: contact.email,
       phone: contact.phone,
       category: {
+        id: contact.category_id,
         name: contact.category_name,
       },
     };
@@ -75,6 +80,7 @@ export class PostgresContactRepository implements ContactRepository {
         contacts.name,
         contacts.email,
         contacts.phone,
+        categories.id AS category_id
         categories.name AS category_name
       FROM contacts
       LEFT JOIN
@@ -92,6 +98,7 @@ export class PostgresContactRepository implements ContactRepository {
       email: contact.email,
       phone: contact.phone,
       category: {
+        id: contact.category_id,
         name: contact.category_name,
       },
     };
@@ -104,7 +111,7 @@ export class PostgresContactRepository implements ContactRepository {
     `;
 
     if (!result) {
-      throw new Error("An error occurred creating category");
+      throw new Error("Failed to create contact");
     }
 
     return result;
@@ -121,7 +128,7 @@ export class PostgresContactRepository implements ContactRepository {
     `;
 
     if (!result) {
-      throw new Error(`An error occurred updating category: ${id}`);
+      throw new Error(`Failed to update contact: ${id}`);
     }
 
     return result;

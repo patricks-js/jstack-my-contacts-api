@@ -58,7 +58,7 @@ export class PostgresCategoryRepository implements CategoryRepository {
     `;
 
     if (!result) {
-      throw new Error("Failed to update category");
+      throw new Error(`Failed to update category: ${id}`);
     }
 
     return result;

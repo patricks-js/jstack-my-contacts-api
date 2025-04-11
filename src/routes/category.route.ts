@@ -1,12 +1,12 @@
-import { randomUUIDv7 } from "bun";
 import { Elysia, t } from "elysia";
 
-import { getCacheDataOrSet } from "@/functions/cache/get-cache-data-or-set";
-import { revalidateCacheOrDelete } from "@/functions/cache/revalidate-cache";
-import { CATEGORY_KEY, CATEGORY_LIST_KEY } from "@/lib/redis";
-import { PostgresCategoryRepository } from "@/repositories/postgres/postgres-category.repository";
+import { PostgresCategoryRepository } from "@/repositories/postgres/postgres-category-repository";
+import { RedisCategoryRepository } from "@/repositories/redis/redis-category-repository";
+import { CategoryService } from "@/services/category-service";
 
 const categoryRepository = new PostgresCategoryRepository();
+const categoryCache = new RedisCategoryRepository();
+const categoryService = new CategoryService(categoryRepository, categoryCache);
 
 export const categoryRoutes = new Elysia({
   prefix: "/categories",
@@ -15,14 +15,7 @@ export const categoryRoutes = new Elysia({
   .get(
     "/",
     async () => {
-      const categoriesCached = await getCacheDataOrSet(
-        CATEGORY_LIST_KEY,
-        async () => {
-          return categoryRepository.findAll();
-        },
-      );
-
-      return categoriesCached;
+      return categoryService.getAll();
     },
     {
       detail: {
@@ -42,18 +35,8 @@ export const categoryRoutes = new Elysia({
   )
   .get(
     "/:id",
-    async ({ params, error }) => {
-      const categoryCached = await getCacheDataOrSet(
-        `${CATEGORY_KEY}${params.id}`,
-        async () => {
-          const category = await categoryRepository.findById(params.id);
-          if (!category) return error(404, "Category not found");
-
-          return category;
-        },
-      );
-
-      return categoryCached;
+    async ({ params }) => {
+      return categoryService.getById(params.id);
     },
     {
       detail: {
@@ -79,17 +62,7 @@ export const categoryRoutes = new Elysia({
   .get(
     "/query",
     async ({ query, error }) => {
-      const categoryCached = await getCacheDataOrSet(
-        `${CATEGORY_KEY}${query.name}`,
-        async () => {
-          const category = await categoryRepository.findByName(query.name);
-          if (!category) return error(404, "Category not found");
-
-          return category;
-        },
-      );
-
-      return categoryCached;
+      return categoryService.getByName(query.name);
     },
     {
       detail: {
@@ -117,22 +90,7 @@ export const categoryRoutes = new Elysia({
     async ({ body, set, error }) => {
       set.status = 201;
 
-      const id = randomUUIDv7();
-
-      const categoryAlreadyExists = await categoryRepository.findByName(
-        body.name,
-      );
-
-      if (categoryAlreadyExists) {
-        return error(409, "Category already exists");
-      }
-
-      await revalidateCacheOrDelete(CATEGORY_LIST_KEY);
-
-      return categoryRepository.save({
-        id,
-        name: body.name,
-      });
+      return categoryService.create(body);
     },
     {
       detail: {
@@ -159,28 +117,10 @@ export const categoryRoutes = new Elysia({
     async ({ params, body, set, error }) => {
       set.status = 204;
 
-      const categoryToUpdate = await categoryRepository.findById(params.id);
-
-      if (!categoryToUpdate || !body.name) {
-        return error(404, "Category not found");
-      }
-
-      const categoryAlreadyExists = await categoryRepository.findByName(
-        body.name,
-      );
-
-      if (categoryAlreadyExists) {
-        return error(409, "Category already exists");
-      }
-
-      const categoryUpdated = Object.assign({}, categoryToUpdate, body);
-
-      await categoryRepository.update(categoryUpdated);
-
-      await Promise.all([
-        revalidateCacheOrDelete(`${CATEGORY_KEY}${params.id}`, categoryUpdated),
-        revalidateCacheOrDelete(CATEGORY_LIST_KEY),
-      ]);
+      return categoryService.update({
+        id: params.id,
+        name: body.name,
+      });
     },
     {
       detail: {
@@ -214,12 +154,7 @@ export const categoryRoutes = new Elysia({
     async ({ params, set }) => {
       set.status = 204;
 
-      await categoryRepository.delete(params.id);
-
-      await Promise.all([
-        revalidateCacheOrDelete(`${CATEGORY_KEY}${params.id}`),
-        revalidateCacheOrDelete(CATEGORY_LIST_KEY),
-      ]);
+      return categoryService.delete(params.id);
     },
     {
       detail: {

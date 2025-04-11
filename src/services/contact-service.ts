@@ -41,7 +41,7 @@ export class ContactService {
     );
     if (contactAlreadyExists) throw new Error("Contact already exists"); // TODO: Create a custom error
 
-    // TODO: Validate category id
+    // TODO: Validate if category exists
 
     const id = randomUUIDv7();
     const contact = await this.contactRepository.create({
@@ -49,23 +49,31 @@ export class ContactService {
       ...data,
     });
 
-    await this.contactCache.setById(id, contact);
+    await this.contactCache.delete("all");
     return contact;
   }
 
-  // TODO: Create DTO to accept category id
-  async update(data: Contact): Promise<Contact> {
-    const categoryToUpdate = await this.contactRepository.findById(data.id);
+  // TODO: Create DTO
+  async update(
+    data: { id: string } & Partial<Omit<Contact, "id">>,
+  ): Promise<Contact> {
+    let categoryToUpdate = await this.contactRepository.findById(data.id);
 
     if (!categoryToUpdate) throw new Error("Category not found"); // TODO: Create a custom error
 
-    // ! Update is not accepting category.id as property
-    const category = await this.contactRepository.update(data);
+    categoryToUpdate = Object.assign({}, categoryToUpdate, data);
+    const categoryUpdated = await this.contactRepository.update({
+      id: categoryToUpdate.id,
+      name: categoryToUpdate.name,
+      email: categoryToUpdate.email,
+      phone: categoryToUpdate.phone,
+      categoryId: categoryToUpdate.category.id,
+    });
 
     await this.contactCache.delete(categoryToUpdate.id);
-    await this.contactCache.setById(categoryToUpdate.id, data);
+    await this.contactCache.setById(categoryToUpdate.id, categoryUpdated);
 
-    return category;
+    return categoryUpdated;
   }
 
   async delete(id: string): Promise<void> {

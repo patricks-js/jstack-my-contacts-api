@@ -57,17 +57,20 @@ export class CategoryService {
     return category;
   }
 
-  async update(data: Category): Promise<Category> {
-    const categoryToUpdate = await this.categoryRepository.findById(data.id);
+  // TODO: Create DTO
+  async update(data: { id: string; name?: string }): Promise<Category> {
+    let categoryToUpdate = await this.categoryRepository.findById(data.id);
 
     if (!categoryToUpdate) throw new Error("Category not found"); // TODO: Create a custom error
 
-    const category = await this.categoryRepository.update(categoryToUpdate);
+    categoryToUpdate = Object.assign({}, categoryToUpdate, data);
+    const categoryUpdated =
+      await this.categoryRepository.update(categoryToUpdate);
 
     await this.categoryCache.delete(categoryToUpdate.id);
-    await this.categoryCache.setById(categoryToUpdate.id, data);
+    await this.categoryCache.setById(categoryToUpdate.id, categoryUpdated);
 
-    return category;
+    return categoryUpdated;
   }
 
   async delete(id: string): Promise<void> {

@@ -9,5 +9,5 @@ export type Contact = {
 };
 
 export type ContactWithCategory = Omit<Contact, "categoryId"> & {
-  category: Omit<Category, "id">;
+  category: Category;
 };

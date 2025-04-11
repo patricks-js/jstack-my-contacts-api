@@ -1,11 +1,12 @@
-import { getCacheDataOrSet } from "@/functions/cache/get-cache-data-or-set";
-import { revalidateCacheOrDelete } from "@/functions/cache/revalidate-cache";
-import { CONTACT_KEY, CONTACT_LIST_KEY } from "@/lib/redis";
-import { PostgresContactRepository } from "@/repositories/postgres/postgres-contact.repository";
-import { randomUUIDv7 } from "bun";
 import { Elysia, t } from "elysia";
 
+import { PostgresContactRepository } from "@/repositories/postgres/postgres-contact-repository";
+import { RedisContactRepository } from "@/repositories/redis/redis-contact-repository";
+import { ContactService } from "@/services/contact-service";
+
 const contactRepository = new PostgresContactRepository();
+const contactCache = new RedisContactRepository();
+const contactService = new ContactService(contactRepository, contactCache);
 
 export const contactRoutes = new Elysia({
   prefix: "/contacts",
@@ -14,14 +15,7 @@ export const contactRoutes = new Elysia({
   .get(
     "/",
     async () => {
-      const contactsCached = await getCacheDataOrSet(
-        CONTACT_LIST_KEY,
-        async () => {
-          return contactRepository.findAll();
-        },
-      );
-
-      return contactsCached;
+      return contactService.getAll();
     },
     {
       response: {
@@ -39,27 +33,21 @@ export const contactRoutes = new Elysia({
       },
       detail: {
         summary: "Get all contacts",
+        description: "Returns a list of all contacts",
       },
     },
   )
   .get(
     "/:id",
     async ({ params, error }) => {
-      const contactCached = await getCacheDataOrSet(
-        `${CONTACT_KEY}${params.id}`,
-        async () => {
-          const contact = await contactRepository.findById(params.id);
-          if (!contact) return error(404, "Contact not found");
-
-          return contact;
-        },
-      );
-
-      return contactCached;
+      return contactService.getById(params.id);
     },
     {
       params: t.Object({
-        id: t.String(),
+        id: t.String({
+          description: "Contact ID",
+          examples: ["12345678-1234-1234-1234-123456789012"],
+        }),
       }),
       response: {
         200: t.Object({
@@ -73,6 +61,7 @@ export const contactRoutes = new Elysia({
       },
       detail: {
         summary: "Get a contact by id",
+        description: "Returns a single contact by its ID",
       },
     },
   )
@@ -81,20 +70,7 @@ export const contactRoutes = new Elysia({
     async ({ body, set, error }) => {
       set.status = 201;
 
-      const id = randomUUIDv7();
-
-      const emailAlreadyTaken = await contactRepository.findByEmail(body.email);
-
-      if (emailAlreadyTaken) {
-        return error(409, "Email already taken");
-      }
-
-      await revalidateCacheOrDelete(CONTACT_LIST_KEY);
-
-      return contactRepository.save({
-        id,
-        ...body,
-      });
+      return contactService.create(body);
     },
     {
       body: t.Object({
@@ -124,38 +100,22 @@ export const contactRoutes = new Elysia({
       },
       detail: {
         summary: "Create a new contact",
+        description: "Creates a new contact with the provided data",
       },
     },
   )
   .put(
     "/:id",
     async ({ params, body, set, error }) => {
-      const contactToUpdate = await contactRepository.findById(params.id);
-
-      if (!contactToUpdate) {
-        return error(404, "Contact not found");
-      }
-
-      if (body.email) {
-        const emailAlreadyTaken = await contactRepository.findByEmail(
-          body.email,
-        );
-
-        if (emailAlreadyTaken) {
-          return error(409, "Email already taken");
-        }
-      }
-
-      const updatedContact = Object.assign({}, contactToUpdate, body);
-
-      await contactRepository.update(updatedContact);
-
-      await Promise.all([
-        revalidateCacheOrDelete(`${CONTACT_KEY}${params.id}`, updatedContact),
-        revalidateCacheOrDelete(CONTACT_LIST_KEY),
-      ]);
-
       set.status = 204;
+
+      return contactService.update({
+        id: params.id,
+        name: body.name,
+        email: body.email,
+        phone: body.phone,
+        categoryId: body.categoryId,
+      });
     },
     {
       body: t.Object({
@@ -186,7 +146,10 @@ export const contactRoutes = new Elysia({
         ),
       }),
       params: t.Object({
-        id: t.String(),
+        id: t.String({
+          description: "Contact ID to update",
+          examples: ["12345678-1234-1234-1234-123456789012"],
+        }),
       }),
       response: {
         204: t.Any(),
@@ -195,6 +158,7 @@ export const contactRoutes = new Elysia({
       },
       detail: {
         summary: "Update a contact",
+        description: "Updates an existing contact with the provided data",
       },
     },
   )
@@ -203,22 +167,21 @@ export const contactRoutes = new Elysia({
     async ({ params, set }) => {
       set.status = 204;
 
-      await contactRepository.delete(params.id);
-
-      await Promise.all([
-        revalidateCacheOrDelete(`${CONTACT_KEY}${params.id}`),
-        revalidateCacheOrDelete(CONTACT_LIST_KEY),
-      ]);
+      return contactService.delete(params.id);
     },
     {
       params: t.Object({
-        id: t.String(),
+        id: t.String({
+          description: "Contact ID to delete",
+          examples: ["12345678-1234-1234-1234-123456789012"],
+        }),
       }),
       response: {
         204: t.Any(),
       },
       detail: {
         summary: "Delete a contact",
+        description: "Deletes a contact by its ID",
       },
     },
   );
