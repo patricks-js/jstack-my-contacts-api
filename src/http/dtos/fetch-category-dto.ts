@@ -1,16 +1,11 @@
 import { t } from "elysia";
 
-export const getAllCategoriesDto = t.Array(
-  t.Object({
-    id: t.String(),
-    name: t.String(),
-  }),
-);
-
 export const getCategoryDto = t.Object({
   id: t.String(),
   name: t.String(),
 });
+
+export const getAllCategoriesDto = t.Array(getCategoryDto);
 
 export const getCategoryParamsDto = t.Object({
   id: t.String({
