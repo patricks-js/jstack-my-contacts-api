@@ -12,9 +12,9 @@ export class ContactService {
     >,
   ) {}
 
-  async getAll() {
-    const contactsCached = await this.contactCache.get("all");
-    if (contactsCached) return contactsCached;
+  async getAll(): Promise<ContactWithCategory[]> {
+    const contactsCached = await this.contactCache.getAll();
+    if (contactsCached) return contactsCached as ContactWithCategory[];
 
     const contacts = await this.contactRepository.findAll();
 
@@ -23,9 +23,9 @@ export class ContactService {
     return contacts;
   }
 
-  async getById(id: string) {
+  async getById(id: string): Promise<ContactWithCategory> {
     const contactCached = await this.contactCache.getById(id);
-    if (contactCached) return contactCached;
+    if (contactCached) return contactCached as ContactWithCategory;
 
     const contact = await this.contactRepository.findById(id);
     if (!contact) throw new Error("Contact not found"); // TODO: Create a custom error
@@ -35,7 +35,7 @@ export class ContactService {
   }
 
   // TODO: Create DTO
-  async create(data: Omit<Contact, "id">) {
+  async create(data: Omit<Contact, "id">): Promise<Contact> {
     const contactAlreadyExists = await this.contactRepository.findByEmail(
       data.email,
     );
@@ -54,7 +54,7 @@ export class ContactService {
   }
 
   // TODO: Create DTO to accept category id
-  async update(data: Contact) {
+  async update(data: Contact): Promise<Contact> {
     const categoryToUpdate = await this.contactRepository.findById(data.id);
 
     if (!categoryToUpdate) throw new Error("Category not found"); // TODO: Create a custom error
@@ -68,7 +68,7 @@ export class ContactService {
     return category;
   }
 
-  async delete(id: string) {
+  async delete(id: string): Promise<void> {
     await this.contactCache.delete(id);
 
     await this.contactCache.delete(id);

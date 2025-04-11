@@ -29,6 +29,13 @@ export class RedisContactRepository implements CacheRepository<Contact> {
     return data && JSON.parse(data);
   }
 
+  async getAll(keySuffix = "all"): Promise<Contact[] | null | undefined> {
+    const key = this.composeKey(keySuffix);
+    const data = await redisClient.get(key);
+
+    return data && JSON.parse(data);
+  }
+
   async getById(id: string): Promise<Contact | Contact[] | null | undefined> {
     const key = this.composeKey(id);
     const data = await redisClient.get(key);

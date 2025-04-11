@@ -10,8 +10,8 @@ export class CategoryService {
     private readonly categoryCache: CacheRepository<Category>,
   ) {}
 
-  async getAll() {
-    const categoriesCached = await this.categoryCache.get("all");
+  async getAll(): Promise<Category[]> {
+    const categoriesCached = await this.categoryCache.getAll();
     if (categoriesCached) return categoriesCached;
 
     const categories = await this.categoryRepository.findAll();
@@ -21,9 +21,9 @@ export class CategoryService {
     return categories;
   }
 
-  async getById(id: string) {
+  async getById(id: string): Promise<Category> {
     const categoryCached = await this.categoryCache.getById(id);
-    if (categoryCached) return categoryCached;
+    if (categoryCached) return categoryCached as Category;
 
     const category = await this.categoryRepository.findById(id);
     if (!category) throw new Error("Category not found"); // TODO: Create a custom error
@@ -32,9 +32,9 @@ export class CategoryService {
     return category;
   }
 
-  async getByName(name: string) {
+  async getByName(name: string): Promise<Category> {
     const categoryCached = await this.categoryCache.get(name);
-    if (categoryCached) return categoryCached;
+    if (categoryCached) return categoryCached as Category;
 
     const category = await this.categoryRepository.findByName(name);
 
@@ -45,7 +45,7 @@ export class CategoryService {
   }
 
   // TODO: Create DTO
-  async create(data: Omit<Category, "id">) {
+  async create(data: Omit<Category, "id">): Promise<Category> {
     const id = randomUUIDv7();
 
     const category = await this.categoryRepository.create({
@@ -57,7 +57,7 @@ export class CategoryService {
     return category;
   }
 
-  async update(data: Category) {
+  async update(data: Category): Promise<Category> {
     const categoryToUpdate = await this.categoryRepository.findById(data.id);
 
     if (!categoryToUpdate) throw new Error("Category not found"); // TODO: Create a custom error
@@ -70,7 +70,7 @@ export class CategoryService {
     return category;
   }
 
-  async delete(id: string) {
+  async delete(id: string): Promise<void> {
     await this.categoryRepository.delete(id);
 
     await this.categoryCache.delete(id);

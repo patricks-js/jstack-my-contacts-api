@@ -29,6 +29,13 @@ export class RedisCategoryRepository implements CacheRepository<Category> {
     return data && JSON.parse(data);
   }
 
+  async getAll(keySuffix = "all"): Promise<Category[] | null | undefined> {
+    const key = this.composeKey(keySuffix);
+    const data = await redisClient.get(key);
+
+    return data && JSON.parse(data);
+  }
+
   async getById(id: string): Promise<Category | Category[] | null | undefined> {
     const key = this.composeKey(id);
     const data = await redisClient.get(key);
