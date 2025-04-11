@@ -1,4 +1,4 @@
-import { redisClient } from "@/lib/redis";
+import { redisClient } from "@/config/redis-client";
 import type { Contact } from "@/models/contact";
 import type { CacheRepository } from "../contracts/cache-repository";
 
