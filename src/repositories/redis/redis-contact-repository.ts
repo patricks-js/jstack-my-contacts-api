@@ -1,4 +1,5 @@
-import { redisClient } from "@/config/redis-client";
+import { redis } from "bun";
+
 import type { Contact } from "@/models/contact";
 import type { CacheRepository } from "../contracts/cache-repository";
 
@@ -10,35 +11,35 @@ export class RedisContactRepository implements CacheRepository<Contact> {
     const key = this.composeKey(keySuffix);
     const value = JSON.stringify(data);
 
-    await redisClient.set(key, value, "EX", this.ttl);
+    await redis.set(key, value, "EX", this.ttl);
   }
 
   async setById(id: string, data: Contact | Contact[]): Promise<void> {
     const key = this.composeKey(id);
     const value = JSON.stringify(data);
 
-    await redisClient.set(key, value, "EX", this.ttl);
+    await redis.set(key, value, "EX", this.ttl);
   }
 
   async get(
     keySuffix: string,
   ): Promise<Contact | Contact[] | null | undefined> {
     const key = this.composeKey(keySuffix);
-    const data = await redisClient.get(key);
+    const data = await redis.get(key);
 
     return data && JSON.parse(data);
   }
 
   async getAll(keySuffix = "all"): Promise<Contact[] | null | undefined> {
     const key = this.composeKey(keySuffix);
-    const data = await redisClient.get(key);
+    const data = await redis.get(key);
 
     return data && JSON.parse(data);
   }
 
   async getById(id: string): Promise<Contact | Contact[] | null | undefined> {
     const key = this.composeKey(id);
-    const data = await redisClient.get(key);
+    const data = await redis.get(key);
 
     return data && JSON.parse(data);
   }
@@ -46,7 +47,7 @@ export class RedisContactRepository implements CacheRepository<Contact> {
   async delete(keySuffix: string): Promise<void> {
     const key = this.composeKey(keySuffix);
 
-    await redisClient.del(key);
+    await redis.del(key);
   }
 
   private composeKey(keySuffix: string): string {
