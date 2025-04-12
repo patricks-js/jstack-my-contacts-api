@@ -6,8 +6,8 @@ export const getContactDto = t.Object({
   email: t.String(),
   phone: t.String(),
   category: t.Object({
-    id: t.String(),
-    name: t.String(),
+    id: t.Nullable(t.String()),
+    name: t.Nullable(t.String()),
   }),
 });
 
