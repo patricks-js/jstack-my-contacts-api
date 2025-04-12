@@ -1,12 +1,18 @@
 import { randomUUIDv7 } from "bun";
-import { inject, injectable } from "tsyringe";
+import { inject, injectable, registry } from "tsyringe";
 
 import { Tokens } from "@/config/tokens";
 import type { Category } from "@/models/category";
 import type { CacheRepository } from "@/repositories/contracts/cache-repository";
 import type { CategoryRepository } from "@/repositories/contracts/category-repository";
+import { PostgresCategoryRepository } from "@/repositories/postgres/postgres-category-repository";
+import { RedisCategoryRepository } from "@/repositories/redis/redis-category-repository";
 import { ResourceNotFoundError } from "./errors/resource-not-found";
 
+@registry([
+  { token: Tokens.CategoryRepository, useClass: PostgresCategoryRepository },
+  { token: Tokens.CategoryCache, useClass: RedisCategoryRepository },
+])
 @injectable()
 export class CategoryService {
   constructor(

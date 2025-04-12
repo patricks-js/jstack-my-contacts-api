@@ -1,14 +1,21 @@
 import { randomUUIDv7 } from "bun";
-import { inject, injectable } from "tsyringe";
+import { inject, injectable, registry } from "tsyringe";
 
 import { Tokens } from "@/config/tokens";
 import type { Contact, ContactWithCategory } from "@/models/contact";
 import type { CacheRepository } from "@/repositories/contracts/cache-repository";
 import type { ContactRepository } from "@/repositories/contracts/contact-repository";
+import { PostgresContactRepository } from "@/repositories/postgres/postgres-contact-repository";
+import { RedisContactRepository } from "@/repositories/redis/redis-contact-repository";
 import { CategoryService } from "./category-service";
 import { ConflictError } from "./errors/conflict";
 import { ResourceNotFoundError } from "./errors/resource-not-found";
 
+@registry([
+  { token: Tokens.ContactRepository, useClass: PostgresContactRepository },
+  { token: Tokens.ContactCache, useClass: RedisContactRepository },
+  { token: Tokens.CategoryService, useClass: CategoryService },
+])
 @injectable()
 export class ContactService {
   constructor(

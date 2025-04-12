@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
+import { container } from "tsyringe";
 
-import { container } from "@/config/container";
 import { ContactService } from "@/services/contact-service";
 import { createContactDto } from "./dtos/create-contact-dto";
 import {
