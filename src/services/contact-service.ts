@@ -1,15 +1,25 @@
 import { randomUUIDv7 } from "bun";
+import { inject, injectable } from "tsyringe";
 
+import { Tokens } from "@/config/tokens";
 import type { Contact, ContactWithCategory } from "@/models/contact";
 import type { CacheRepository } from "@/repositories/contracts/cache-repository";
 import type { ContactRepository } from "@/repositories/contracts/contact-repository";
+import { CategoryService } from "./category-service";
+import { ConflictError } from "./errors/conflict";
+import { ResourceNotFoundError } from "./errors/resource-not-found";
 
+@injectable()
 export class ContactService {
   constructor(
+    @inject(Tokens.ContactRepository)
     private readonly contactRepository: ContactRepository,
+    @inject(Tokens.ContactCache)
     private readonly contactCache: CacheRepository<
       Contact | ContactWithCategory
     >,
+    @inject(Tokens.CategoryService)
+    private readonly categoryService: CategoryService,
   ) {}
 
   async getAll(): Promise<ContactWithCategory[]> {
@@ -28,7 +38,7 @@ export class ContactService {
     if (contactCached) return contactCached as ContactWithCategory;
 
     const contact = await this.contactRepository.findById(id);
-    if (!contact) throw new Error("Contact not found"); // TODO: Create a custom error
+    if (!contact) throw new ResourceNotFoundError("Contact");
 
     await this.contactCache.setById(id, contact);
     return contact;
@@ -39,9 +49,9 @@ export class ContactService {
     const contactAlreadyExists = await this.contactRepository.findByEmail(
       data.email,
     );
-    if (contactAlreadyExists) throw new Error("Contact already exists"); // TODO: Create a custom error
+    if (contactAlreadyExists) throw new ConflictError("Contact already exists");
 
-    // TODO: Validate if category exists
+    await this.categoryService.getById(data.categoryId);
 
     const id = randomUUIDv7();
     const contact = await this.contactRepository.create({
@@ -59,7 +69,7 @@ export class ContactService {
   ): Promise<Contact> {
     let categoryToUpdate = await this.contactRepository.findById(data.id);
 
-    if (!categoryToUpdate) throw new Error("Category not found"); // TODO: Create a custom error
+    if (!categoryToUpdate) throw new ResourceNotFoundError("Contact");
 
     categoryToUpdate = Object.assign({}, categoryToUpdate, data);
     const categoryUpdated = await this.contactRepository.update({

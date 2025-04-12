@@ -1,8 +1,10 @@
 import { redis } from "bun";
+import { injectable } from "tsyringe";
 
 import type { Category } from "@/models/category";
 import type { CacheRepository } from "../contracts/cache-repository";
 
+@injectable()
 export class RedisCategoryRepository implements CacheRepository<Category> {
   private ttl = 3600;
   private prefix = "category";

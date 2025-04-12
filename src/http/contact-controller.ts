@@ -1,7 +1,6 @@
 import { Elysia, t } from "elysia";
 
-import { PostgresContactRepository } from "@/repositories/postgres/postgres-contact-repository";
-import { RedisContactRepository } from "@/repositories/redis/redis-contact-repository";
+import { container } from "@/config/container";
 import { ContactService } from "@/services/contact-service";
 import { createContactDto } from "./dtos/create-contact-dto";
 import {
@@ -11,9 +10,7 @@ import {
 } from "./dtos/fetch-contact-dto";
 import { updateContactDto } from "./dtos/update-contact-dto";
 
-const contactRepository = new PostgresContactRepository();
-const contactCache = new RedisContactRepository();
-const contactService = new ContactService(contactRepository, contactCache);
+const contactService = container.resolve(ContactService);
 
 export const contactController = new Elysia({
   prefix: "/contacts",

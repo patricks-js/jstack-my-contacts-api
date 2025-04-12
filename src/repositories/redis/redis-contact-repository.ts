@@ -1,8 +1,10 @@
 import { redis } from "bun";
+import { injectable } from "tsyringe";
 
 import type { Contact } from "@/models/contact";
 import type { CacheRepository } from "../contracts/cache-repository";
 
+@injectable()
 export class RedisContactRepository implements CacheRepository<Contact> {
   private ttl = 3600;
   private prefix = "contact";

@@ -1,7 +1,6 @@
 import { Elysia, t } from "elysia";
 
-import { PostgresCategoryRepository } from "@/repositories/postgres/postgres-category-repository";
-import { RedisCategoryRepository } from "@/repositories/redis/redis-category-repository";
+import { container } from "@/config/container";
 import { CategoryService } from "@/services/category-service";
 import { createCategoryDto } from "./dtos/create-category-dto";
 import {
@@ -12,9 +11,7 @@ import {
 } from "./dtos/fetch-category-dto";
 import { updateCategoryDto } from "./dtos/update-categoty-dto";
 
-const categoryRepository = new PostgresCategoryRepository();
-const categoryCache = new RedisCategoryRepository();
-const categoryService = new CategoryService(categoryRepository, categoryCache);
+const categoryService = container.resolve(CategoryService);
 
 export const categoryController = new Elysia({
   prefix: "/categories",

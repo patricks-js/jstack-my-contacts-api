@@ -1,8 +1,10 @@
 import { sql } from "bun";
+import { injectable } from "tsyringe";
 
 import type { Category } from "@/models/category";
 import type { CategoryRepository } from "@/repositories/contracts/category-repository";
 
+@injectable()
 export class PostgresCategoryRepository implements CategoryRepository {
   async findAll(): Promise<Category[]> {
     const categories: Category[] = await sql`

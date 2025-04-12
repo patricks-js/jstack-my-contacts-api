@@ -1,4 +1,5 @@
 import { sql } from "bun";
+import { injectable } from "tsyringe";
 
 import type { Contact, ContactWithCategory } from "@/models/contact";
 import type { ContactRepository } from "@/repositories/contracts/contact-repository";
@@ -8,6 +9,7 @@ type ContactJoinCategory = Omit<Contact, "category_id"> & {
   category_name: string;
 };
 
+@injectable()
 export class PostgresContactRepository implements ContactRepository {
   async findAll(): Promise<ContactWithCategory[]> {
     const contacts: ContactJoinCategory[] = await sql`
@@ -47,7 +49,7 @@ export class PostgresContactRepository implements ContactRepository {
         contacts.name,
         contacts.email,
         contacts.phone,
-        categories.id AS category_id
+        categories.id AS category_id,
         categories.name AS category_name
       FROM contacts
       LEFT JOIN
@@ -80,7 +82,7 @@ export class PostgresContactRepository implements ContactRepository {
         contacts.name,
         contacts.email,
         contacts.phone,
-        categories.id AS category_id
+        categories.id AS category_id,
         categories.name AS category_name
       FROM contacts
       LEFT JOIN
@@ -105,8 +107,16 @@ export class PostgresContactRepository implements ContactRepository {
   }
 
   async create(contact: Contact): Promise<Contact> {
+    const contactToInsert = {
+      id: contact.id,
+      name: contact.name,
+      email: contact.email,
+      phone: contact.phone,
+      category_id: contact.categoryId,
+    };
+
     const [result]: Contact[] = await sql`
-      INSERT INTO contacts ${sql(contact)}
+      INSERT INTO contacts ${sql(contactToInsert)}
       RETURNING *
     `;
 

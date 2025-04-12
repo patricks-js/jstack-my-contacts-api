@@ -1,4 +1,5 @@
 import { Elysia } from "elysia";
+import "reflect-metadata";
 
 import { swaggerPlugin } from "./config/swagger";
 import { categoryController } from "./http/category-controller";
