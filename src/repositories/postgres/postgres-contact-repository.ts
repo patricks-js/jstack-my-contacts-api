@@ -16,7 +16,7 @@ export class PostgresContactRepository implements ContactRepository {
         contacts.name,
         contacts.email,
         contacts.phone,
-        categories.id AS category_id
+        categories.id AS category_id,
         categories.name AS category_name
       FROM contacts
       LEFT JOIN
