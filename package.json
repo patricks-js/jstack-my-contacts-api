@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@types/bun": "^1.2.9"
+    "@types/bun": "^1.2.10"
   },
   "peerDependencies": {
     "typescript": "^5.8.3"
@@ -19,6 +19,6 @@
     "@elysiajs/swagger": "^1.2.2",
     "elysia": "^1.2.25",
     "reflect-metadata": "^0.2.2",
-    "tsyringe": "^4.9.1"
+    "tsyringe": "^4.10.0"
   }
 }
