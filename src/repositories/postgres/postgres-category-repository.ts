@@ -33,8 +33,8 @@ export class PostgresCategoryRepository implements CategoryRepository {
     return category;
   }
 
-  async create(category: Category): Promise<Category> {
-    const { id, name } = category;
+  async create(data: Category): Promise<Category> {
+    const { id, name } = data;
 
     const [result]: Category[] = await sql`
       INSERT INTO categories (id, name)
@@ -49,8 +49,8 @@ export class PostgresCategoryRepository implements CategoryRepository {
     return result;
   }
 
-  async update(category: Category): Promise<Category> {
-    const { id, name } = category;
+  async update(data: Category): Promise<Category> {
+    const { id, name } = data;
 
     const [result]: Category[] = await sql`
       UPDATE categories

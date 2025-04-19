@@ -27,16 +27,27 @@ export class PostgresContactRepository implements ContactRepository {
     `;
 
     const contactsWithCategory: ContactWithCategory[] = contacts
-      .map((contact) => ({
-        id: contact.id,
-        name: contact.name,
-        email: contact.email,
-        phone: contact.phone,
-        category: {
-          id: contact.category_id,
-          name: contact.category_name,
-        },
-      }))
+      .map((contact) => {
+        const contactToReturn = {
+          id: contact.id,
+          name: contact.name,
+          email: contact.email,
+          phone: contact.phone,
+        };
+
+        if (contact.category_id) {
+          Object.defineProperties(contactToReturn, {
+            category: {
+              value: {
+                id: contact.category_id,
+                name: contact.category_name,
+              },
+            },
+          });
+        }
+
+        return contactToReturn;
+      })
       .slice(0, contacts.length);
 
     return contactsWithCategory;
@@ -106,14 +117,19 @@ export class PostgresContactRepository implements ContactRepository {
     };
   }
 
-  async create(contact: Contact): Promise<Contact> {
+  async create(data: ContactRepository.CreateParams): Promise<Contact> {
     const contactToInsert = {
-      id: contact.id,
-      name: contact.name,
-      email: contact.email,
-      phone: contact.phone,
-      category_id: contact.categoryId,
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
     };
+
+    if (data.categoryId) {
+      Object.defineProperty(contactToInsert, "category_id", {
+        value: data.categoryId,
+      });
+    }
 
     const [result]: Contact[] = await sql`
       INSERT INTO contacts ${sql(contactToInsert)}
@@ -127,8 +143,8 @@ export class PostgresContactRepository implements ContactRepository {
     return result;
   }
 
-  async update(contact: Contact): Promise<Contact> {
-    const { id, name, email, phone, categoryId } = contact;
+  async update(data: ContactRepository.UpdateParams): Promise<Contact> {
+    const { id, name, email, phone, categoryId } = data;
 
     const [result] = await sql`
       UPDATE contacts
