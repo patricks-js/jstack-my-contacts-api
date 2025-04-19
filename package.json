@@ -17,7 +17,9 @@
   },
   "dependencies": {
     "@elysiajs/swagger": "^1.2.2",
+    "@tqman/nice-logger": "^1.1.1",
     "elysia": "^1.2.25",
+    "logestic": "^1.2.4",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.10.0"
   }

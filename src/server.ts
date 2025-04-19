@@ -1,12 +1,13 @@
-import { Elysia } from "elysia";
 import "reflect-metadata";
 
 import swagger from "@elysiajs/swagger";
+import { logger } from "@tqman/nice-logger";
+import { Elysia } from "elysia";
+
 import { categoryController } from "./http/category-controller";
 import { contactController } from "./http/contact-controller";
 
 // TODO: add error handling
-// TODO: add custom logging
 export const app = new Elysia()
   .use(
     swagger({
@@ -19,10 +20,13 @@ export const app = new Elysia()
       },
     }),
   )
+  .use(
+    logger({
+      mode: "live",
+      withTimestamp: true,
+      withBanner: true,
+    }),
+  )
   .use(contactController)
   .use(categoryController)
   .listen(3000);
-
-console.log(
-  `🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}`,
-);
