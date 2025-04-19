@@ -5,10 +5,12 @@ export const getContactDto = t.Object({
   name: t.String(),
   email: t.String(),
   phone: t.String(),
-  category: t.Object({
-    id: t.Nullable(t.String()),
-    name: t.Nullable(t.String()),
-  }),
+  category: t.Optional(
+    t.Object({
+      id: t.Nullable(t.String()),
+      name: t.Nullable(t.String()),
+    }),
+  ),
 });
 
 export const getAllContactsDto = t.Array(getContactDto);

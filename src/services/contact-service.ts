@@ -52,18 +52,25 @@ export class ContactService {
   }
 
   // TODO: Create DTO
-  async create(data: Omit<Contact, "id">): Promise<Contact> {
+  async create(
+    data: Omit<Contact, "id" | "categoryId"> & { categoryId?: string },
+  ): Promise<Contact> {
     const contactAlreadyExists = await this.contactRepository.findByEmail(
       data.email,
     );
     if (contactAlreadyExists) throw new ConflictError("Contact already exists");
 
-    await this.categoryService.getById(data.categoryId);
+    if (data.categoryId) {
+      await this.categoryService.getById(data.categoryId);
+    }
 
     const id = randomUUIDv7();
     const contact = await this.contactRepository.create({
       id,
-      ...data,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      categoryId: data.categoryId,
     });
 
     await this.contactCache.delete("all");
@@ -71,30 +78,38 @@ export class ContactService {
   }
 
   // TODO: Create DTO
-  async update(
-    data: { id: string } & Partial<Omit<Contact, "id">>,
-  ): Promise<Contact> {
-    let categoryToUpdate = await this.contactRepository.findById(data.id);
+  async update(data: Partial<Contact> & { id: string }): Promise<Contact> {
+    const contactToUpdate = await this.contactRepository.findById(data.id);
 
-    if (!categoryToUpdate) throw new ResourceNotFoundError("Contact");
+    if (!contactToUpdate) throw new ResourceNotFoundError("Contact");
 
-    categoryToUpdate = Object.assign({}, categoryToUpdate, data);
-    const categoryUpdated = await this.contactRepository.update({
-      id: categoryToUpdate.id,
-      name: categoryToUpdate.name,
-      email: categoryToUpdate.email,
-      phone: categoryToUpdate.phone,
-      categoryId: categoryToUpdate.category.id,
+    if (data.email && data.email !== contactToUpdate.email) {
+      const contactAlreadyExists = await this.contactRepository.findByEmail(
+        data.email,
+      );
+
+      if (contactAlreadyExists && contactAlreadyExists.id !== data.id) {
+        throw new ConflictError("Contact already exists");
+      }
+    }
+
+    const contactUpdated = await this.contactRepository.update({
+      id: contactToUpdate.id,
+      name: data.name ?? contactToUpdate.name,
+      email: data.email ?? contactToUpdate.email,
+      phone: data.phone ?? contactToUpdate.phone,
+      categoryId: data.categoryId,
     });
 
-    await this.contactCache.delete(categoryToUpdate.id);
-    await this.contactCache.setById(categoryToUpdate.id, categoryUpdated);
+    await this.contactCache.delete("all");
+    await this.contactCache.delete(contactToUpdate.id);
+    await this.contactCache.setById(contactToUpdate.id, contactUpdated);
 
-    return categoryUpdated;
+    return contactUpdated;
   }
 
   async delete(id: string): Promise<void> {
-    await this.contactCache.delete(id);
+    await this.contactRepository.delete(id);
 
     await this.contactCache.delete(id);
     await this.contactCache.delete("all");

@@ -18,8 +18,10 @@ export const createContactDto = t.Object({
     description: "Contact phone",
     examples: ["+5581999999999"],
   }),
-  categoryId: t.String({
-    description: "Contact category id",
-    examples: ["123e4567-e89b-12d3-a456-426614174000"],
-  }),
+  categoryId: t.Optional(
+    t.String({
+      description: "Contact category id",
+      examples: ["123e4567-e89b-12d3-a456-426614174000"],
+    }),
+  ),
 });

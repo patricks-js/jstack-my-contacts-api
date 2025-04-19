@@ -33,7 +33,7 @@ export const contactController = new Elysia({
   )
   .get(
     "/:id",
-    async ({ params, error }) => {
+    async ({ params }) => {
       return contactService.getById(params.id);
     },
     {
@@ -50,7 +50,7 @@ export const contactController = new Elysia({
   )
   .post(
     "/",
-    async ({ body, set, error }) => {
+    async ({ body, set }) => {
       set.status = 201;
 
       return contactService.create(body);
@@ -71,7 +71,7 @@ export const contactController = new Elysia({
   )
   .put(
     "/:id",
-    async ({ params, body, set, error }) => {
+    async ({ params, body, set }) => {
       set.status = 204;
 
       return contactService.update({
