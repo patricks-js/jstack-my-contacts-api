@@ -7,6 +7,7 @@ import type { CacheRepository } from "@/repositories/contracts/cache-repository"
 import type { CategoryRepository } from "@/repositories/contracts/category-repository";
 import { PostgresCategoryRepository } from "@/repositories/postgres/postgres-category-repository";
 import { RedisCategoryRepository } from "@/repositories/redis/redis-category-repository";
+import { ConflictError } from "./errors/conflict";
 import { ResourceNotFoundError } from "./errors/resource-not-found";
 
 @registry([
@@ -60,6 +61,13 @@ export class CategoryService {
   async create(data: Omit<Category, "id">): Promise<Category> {
     const id = randomUUIDv7();
 
+    const categoryAlreadyExists = await this.categoryRepository.findByName(
+      data.name,
+    );
+    if (categoryAlreadyExists) {
+      throw new ConflictError("Category already exists");
+    }
+
     const category = await this.categoryRepository.create({
       id,
       ...data,
@@ -71,14 +79,26 @@ export class CategoryService {
 
   // TODO: Create DTO
   async update(data: { id: string; name?: string }): Promise<Category> {
-    let categoryToUpdate = await this.categoryRepository.findById(data.id);
+    const categoryToUpdate = await this.categoryRepository.findById(data.id);
 
     if (!categoryToUpdate) throw new ResourceNotFoundError("Category");
 
-    categoryToUpdate = Object.assign({}, categoryToUpdate, data);
-    const categoryUpdated =
-      await this.categoryRepository.update(categoryToUpdate);
+    if (data.name) {
+      const categoryAlreadyExists = await this.categoryRepository.findByName(
+        data.name,
+      );
 
+      if (categoryAlreadyExists && categoryAlreadyExists.id !== data.id) {
+        throw new ConflictError("Category already exists");
+      }
+    }
+
+    const categoryUpdated = await this.categoryRepository.update({
+      id: categoryToUpdate.id,
+      name: data.name ?? categoryToUpdate.name,
+    });
+
+    await this.categoryCache.delete("all");
     await this.categoryCache.delete(categoryToUpdate.id);
     await this.categoryCache.setById(categoryToUpdate.id, categoryUpdated);
 
